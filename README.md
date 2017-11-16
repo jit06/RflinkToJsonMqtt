@@ -18,3 +18,5 @@ Required libraries :
 - SoftwareSerial
 - PubSubClient
 - Ethernet
+
+More detail on how to build the complete shield on my blog : http://www.bluemind.org/custom-arduino-shield-mqtt-rflink
