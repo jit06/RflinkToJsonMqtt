@@ -33,7 +33,7 @@ void readRfLinkPacket(char* line) {
   // if name contains "=", assumes that it's an rflink message, not an RF packet
   // thus we put a special name and ID=0, then parse to JSON
   if(nameHasEq==true) {
-    Serial.println(F("name contains '=' !"));
+    Serial.println(F("*rflink message detected (name contains '=')"));
     i = 6;
     strcpy_P(MQTT_NAME,PSTR("message"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
@@ -44,7 +44,7 @@ void readRfLinkPacket(char* line) {
   
   // for debug and ACK messages, send them directly, no json convertion
   if(RfLinkIsStringInArray(MQTT_NAME,RFLINK_MQTT_NAMES_NO_JSON)) {
-    Serial.println(F("Special name found => no JSON convertion"));
+    Serial.println(F("*special name found: no JSON convertion"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
     j=0;
     while(line[i] != '\n' && i < BUFFER_SIZE && j < BUFFER_SIZE) {
@@ -124,13 +124,13 @@ void readRfLinkFields(char* fields, int start){
 
 
 /**
- * check wether a given string is in a PROGMEN array of strings
+ * check wether a given string is in an array of strings
  */
-bool RfLinkIsStringInArray(char *buffer, char* strArray[]) {
+bool RfLinkIsStringInArray(char *buffer, const char* const strArray[]) {
   int i = 0;
   
-  while(pgm_read_word(strArray + i) != '\0') {
-    if((strcmp_P(buffer, pgm_read_word(strArray + i++))==0)) return true;
+  while(strArray[i][0] != '\0') {
+    if((strcmp(buffer, (strArray[i++]))==0)) return true;
   }
 
   return false;
@@ -192,4 +192,3 @@ void RfLinkFieldAddIntegerValue(char *buffer) {
   char s[21];
   strcat(JSON, ultoa(strtoul(buffer,NULL,16),s,10));
 }
-

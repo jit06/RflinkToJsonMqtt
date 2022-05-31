@@ -14,8 +14,8 @@ char MQTT_ID  [MAX_DATA_LEN];
 char MQTT_CHAN[MAX_CHANNEL_LEN];
 char FIELD_BUF[MAX_DATA_LEN];
 
-IPAddress IP STATIC_IP ;
-byte mac[] = ETHER_MAC ;
+//IPAddress IP STATIC_IP ;
+//byte mac[] = ETHER_MAC ;
 
 #ifdef MQTT_SERVER_MODE_DNS
 const char SERVER[] = MQTT_SERVER_NAME;
@@ -28,16 +28,18 @@ int CPT;
 // reconnection attemps timer counter
 long lastReconnectAttempt = 0;
 
-SoftwareSerial mySerial(8, 9); // RX, TX
+SoftwareSerial mySerial(SOFTWARE_SERIAL_RX, SOFTWARE_SERIAL_TX); // RX, TX
 
-EthernetClient ethClient;
-PubSubClient client(SERVER, MQTT_PORT, callback, ethClient);
+//EthernetClient ethClient;
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 
 /**
  * callback to handle rflink order received from MQTT subscribtion
  */
-void callback(char* topic, byte* payload, unsigned int len) {
+void mqttCallback(char* topic, byte* payload, unsigned int len) {
+  
   mySerial.write(payload, len);
   mySerial.print(F("\r\n"));
   Serial.println(F("=== Mqtt packet ==="));
@@ -60,34 +62,69 @@ void buildMqttChannel(char *name, char *ID) {
 }
 
 /**
- * send formated messagee to serial
+ * send formated message to serial
  */
 void printToSerial() {
-  Serial.println(F("=== rflink packet ==="));
-  Serial.print(F("Raw data = "));Serial.print(BUFFER);    
-  Serial.print(F("Mqtt pub = "));
-  Serial.print(MQTT_CHAN);
-  Serial.print("/");
-  Serial.println(JSON);
-  Serial.println();
+  Serial.println(F("\n=== rflink packet ==="));
+  Serial.print(F("raw  => ")); if(BUFFER[strlen(BUFFER)-1] == '\n') Serial.print(BUFFER); else Serial.println(BUFFER);    
+  Serial.print(F("mqtt => ")); Serial.print(MQTT_CHAN); Serial.print(F("/")); Serial.println(JSON);
 }
-
 
 /**
  * try to connect to MQTT Server
  */
-boolean MqttConnect() {
-  
-  // connect to Mqtt server and subcribe to order channel
-  if (client.connect(MQTT_RFLINK_CLIENT_NAME)) {
-    client.subscribe(MQTT_RFLINK_ORDER_CHANNEL);
-  }
+boolean mqttConnect() {
+  Serial.print(F("Connecting to MQTT..."));
+  client.setServer(SERVER,MQTT_PORT);
+  client.setCallback(mqttCallback);
 
-  // report mqtt connection status
-  Serial.print(F("Mqtt connection state : "));
-  Serial.println(client.state());
+  while (!client.connected()) {
+    // connect to Mqtt server and subcribe to order channel
+    if (client.connect(MQTT_RFLINK_CLIENT_NAME)) {
+      client.subscribe(MQTT_RFLINK_ORDER_CHANNEL);
+      Serial.print(" OK");
+    }
+    else {
+      Serial.print(F("ERROR ("));
+      Serial.print(client.state());
+      Serial.println(F(")"));
+      Serial.println(F("retry in 5 secs"));
+      delay(5000);   
+     }
+  }
+  
+  Serial.print(F(" ("));
+  Serial.print(SERVER);
+  Serial.println(F(")"));
   
   return client.connected();
+}
+
+
+/**
+ * try to connect to Wifi
+ */
+void wifiConnect() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print(F("Connecting to WiFi..."));
+
+  while(WiFi.status() != WL_CONNECTED){
+    delay(200);
+  }
+  Serial.print(F(" OK ("));
+  Serial.print(WiFi.localIP());
+  Serial.println(F(")"));
+}
+
+
+/**
+ * Setup software serial to get RFlink output
+ */
+void initSoftwareSerial() {
+  Serial.print(F("Init software serial..."));
+  mySerial.begin(57600); // RF Link output at 57600
+  Serial.println(F(" OK"));
 }
 
 
@@ -95,59 +132,56 @@ boolean MqttConnect() {
  * Classic arduino bootstrap
 /*********************************************************************************/
 void setup() {
-  
+
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
-  Serial.println(F("Starting..."));
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    Serial.print("."); // wait for serial port to connect. Needed for native USB port only
   }
-  Serial.println(F("Init serial done"));
-
+  Serial.println(F("\n\n\n======= RFLINK TO JSON MQTT - ESP8266 ======="));
   
-  // set the data rate for the SoftwareSerial port
-  mySerial.begin(57600);
-  Serial.println(F("Init software serial done"));
-
-#ifdef MQTT_SERVER_MODE_DNS
-Serial.print(F("Mqtt server name set to : "));
-Serial.println(SERVER);
-#endif
-  
-  // start ethernet connection, trying DHCP
-  if (Ethernet.begin(mac) == 0) {
-    Serial.println(F("Dhcp failed, start with static IP"));
-    Ethernet.begin(mac, IP);  
-  }
-  
-  Serial.print(F("Ethernet IP : "));
-  Serial.println(Ethernet.localIP());
-
-  MqttConnect();
+  initSoftwareSerial();
+  wifiConnect();
+  mqttConnect();
 }
-
 
 /*********************************************************************************
  * Main loop
 /*********************************************************************************/
 void loop() {
+  int mqttState=-99, wifiState=-99;
 
-  // handle lost of connection : retry after 2s on each loop
-  if (!client.connected()) {
-    Serial.println(F("Not connected, retrying in 2s"));
-    delay(2000);
-    MqttConnect();
-  } else {
-    // if something arrives from rflink
-    if(mySerial.available()) {
-      // bufferize serial message
-      while(mySerial.available() && CPT < BUFFER_SIZE) {
-        BUFFER[CPT] = mySerial.read();
-        CPT++;
-      }
+  wifiState = WiFi.status();
+  if(wifiState != WL_CONNECTED) {
+    Serial.print(F("Wifi disconnected (state = "));
+    Serial.print(wifiState);
+    Serial.println(F(")"));
+    wifiConnect();
+  }
+    
+  mqttState = client.state();
+  // handle lost of connection
+  if (mqttState != 0) {
+    Serial.print(F("MQTT disconnected (state = "));
+    Serial.print(mqttState);
+    Serial.println(F(")"));
+    mqttConnect();
+  }
+
+  // if something arrives from rflink
+  if(mySerial.available() > 0) {
+    // bufferize serial message until we find end of mqtt message (\n)
+    while(mySerial.available() > 0 && CPT < BUFFER_SIZE) {
+      BUFFER[CPT] = mySerial.read();
+      CPT++;
+      if(BUFFER[CPT-1] == '\n') break;
+    }
+
+    // we start parsing rflink only if last read char is end of message (\n)
+    if(BUFFER[CPT-1] == '\n') {
       BUFFER[CPT]='\0';
       CPT=0;
-  
+   
       // parse what we just read
       readRfLinkPacket(BUFFER);
       // construct channel name to publish to
@@ -157,8 +191,7 @@ void loop() {
       // report message for debugging
       printToSerial();
     }
-  
-    client.loop();
   }
-}
 
+  client.loop();
+}
