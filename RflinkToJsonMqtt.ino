@@ -42,10 +42,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int len) {
   
   mySerial.write(payload, len);
   mySerial.print(F("\r\n"));
-  Serial.println(F("=== Mqtt packet ==="));
-  Serial.print(F("message = "));
+  Serial.println(F("\n=== Mqtt packet ==="));
+  Serial.print(F("message => "));
   Serial.write(payload, len);
-  Serial.print(F("\r\n"));
+  Serial.print(F("\n"));
 }
 
 /**

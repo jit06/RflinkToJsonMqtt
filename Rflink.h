@@ -67,7 +67,7 @@ const char RFLINK_MQTT_NAME_Debug[]      = "Debug";
 const char RFLINK_MQTT_NAME_OK[]         = "OK";
 const char RFLINK_MQTT_NAME_CMD_UNKNOWN[]= "CMD_UNKNOWN";
 const char RFLINK_MQTT_NAME_PONG[]       = "PONG";
-const char RFLINK_MQTT_NAME_NODO[]       = "Nodo_RadioFrequencyLink";
+const char RFLINK_MQTT_NAME_NODO[]       = "Nodo RadioFrequencyLink";
 const char* const  RFLINK_MQTT_NAMES_NO_JSON[] = {
   RFLINK_MQTT_NAME_DEBUG,
   RFLINK_MQTT_NAME_Debug,
