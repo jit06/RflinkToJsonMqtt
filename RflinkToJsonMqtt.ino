@@ -39,13 +39,14 @@ PubSubClient client(espClient);
  * callback to handle rflink order received from MQTT subscribtion
  */
 void mqttCallback(char* topic, byte* payload, unsigned int len) {
-  
+  controlStatusLed(STATUS_LED_OUT, HIGH);
   mySerial.write(payload, len);
   mySerial.print(F("\r\n"));
   Serial.println(F("\n=== Mqtt packet ==="));
   Serial.print(F("message => "));
   Serial.write(payload, len);
   Serial.print(F("\n"));
+  controlStatusLed(STATUS_LED_OUT, LOW);
 }
 
 /**
@@ -74,6 +75,7 @@ void printToSerial() {
  * try to connect to MQTT Server
  */
 boolean mqttConnect() {
+  controlStatusLed(STATUS_LED_MQTT, LOW);
   Serial.print(F("Connecting to MQTT..."));
   client.setServer(SERVER,MQTT_PORT);
   client.setCallback(mqttCallback);
@@ -82,20 +84,25 @@ boolean mqttConnect() {
     // connect to Mqtt server and subcribe to order channel
     if (client.connect(MQTT_RFLINK_CLIENT_NAME)) {
       client.subscribe(MQTT_RFLINK_ORDER_CHANNEL);
+      controlStatusLed(STATUS_LED_MQTT, HIGH);
       Serial.print(" OK");
     }
     else {
+      controlStatusLed(STATUS_LED_MQTT, HIGH);
+      delay(1000);
+      controlStatusLed(STATUS_LED_MQTT, LOW);
       Serial.print(F("ERROR ("));
       Serial.print(client.state());
       Serial.println(F(")"));
       Serial.println(F("retry in 5 secs"));
-      delay(5000);   
-     }
+      delay(4000);
+    }
   }
   
   Serial.print(F(" ("));
   Serial.print(SERVER);
   Serial.println(F(")"));
+  controlStatusLed(STATUS_LED_MQTT, HIGH);
   
   return client.connected();
 }
@@ -105,16 +112,20 @@ boolean mqttConnect() {
  * try to connect to Wifi
  */
 void wifiConnect() {
+  controlStatusLed(STATUS_LED_WIFI, LOW);
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print(F("Connecting to WiFi..."));
 
   while(WiFi.status() != WL_CONNECTED){
+    controlStatusLed(STATUS_LED_WIFI, HIGH);
     delay(200);
+    controlStatusLed(STATUS_LED_WIFI, LOW);
   }
   Serial.print(F(" OK ("));
   Serial.print(WiFi.localIP());
   Serial.println(F(")"));
+  controlStatusLed(STATUS_LED_WIFI, HIGH);
 }
 
 
@@ -128,11 +139,30 @@ void initSoftwareSerial() {
 }
 
 
+void initStatusLeds() {
+  pinMode(STATUS_LED_WIFI   , OUTPUT);
+  pinMode(STATUS_LED_MQTT   , OUTPUT);
+  pinMode(STATUS_LED_IN     , OUTPUT);
+  pinMode(STATUS_LED_OUT    , OUTPUT);
+
+  controlStatusLed(STATUS_LED_WIFI, LOW);
+  controlStatusLed(STATUS_LED_MQTT, LOW);
+  controlStatusLed(STATUS_LED_IN  , LOW);
+  controlStatusLed(STATUS_LED_OUT , LOW);
+}
+
+
+void controlStatusLed(int pin, int state) {
+  digitalWrite(pin, state);
+}
+
 /*********************************************************************************
  * Classic arduino bootstrap
 /*********************************************************************************/
 void setup() {
 
+  initStatusLeds();
+  
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {
@@ -170,13 +200,14 @@ void loop() {
 
   // if something arrives from rflink
   if(mySerial.available() > 0) {
+    controlStatusLed(STATUS_LED_IN, HIGH);
     // bufferize serial message until we find end of mqtt message (\n)
     while(mySerial.available() > 0 && CPT < BUFFER_SIZE) {
       BUFFER[CPT] = mySerial.read();
       CPT++;
       if(BUFFER[CPT-1] == '\n') break;
     }
-
+    
     // we start parsing rflink only if last read char is end of message (\n)
     if(BUFFER[CPT-1] == '\n') {
       BUFFER[CPT]='\0';
@@ -190,6 +221,7 @@ void loop() {
       client.publish(MQTT_CHAN,JSON);
       // report message for debugging
       printToSerial();
+      controlStatusLed(STATUS_LED_IN, LOW);
     }
   }
 

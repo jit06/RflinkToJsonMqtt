@@ -30,12 +30,16 @@
 // MQTT Server mode : comment out to use MQTT_SERVER_IP instead of MQTT_SERVER_NAME
 #define MQTT_SERVER_MODE_DNS
 // WIFI Settings
-#define WIFI_SSID "MY_SSID"
-#define WIFI_PASSWORD "WIFI_PASSWORD"
+#define WIFI_SSID ""
+#define WIFI_PASSWORD ""
 // software serial pin
 #define SOFTWARE_SERIAL_RX 4
 #define SOFTWARE_SERIAL_TX 5
-
+// status leds
+#define STATUS_LED_WIFI 16
+#define STATUS_LED_MQTT 14
+#define STATUS_LED_IN   12
+#define STATUS_LED_OUT  13
 
 /*********************************************************************************
  * functions defined in scketch
@@ -46,5 +50,7 @@ void printToSerial();
 void wifiConnect();
 boolean mqttConnect();
 void initSoftwareSerial();
+void initStatusLeds();
+void controlStatusLed(int pin, int state);
 
 #endif
