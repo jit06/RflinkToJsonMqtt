@@ -1,5 +1,7 @@
 #include "Common.h"
 #include "Rflink.h"
+#include "Webserver.h"
+#include <ArduinoOTA.h>
 
 /*********************************************************************************
  * Global Variables
@@ -14,8 +16,6 @@ char MQTT_ID  [MAX_DATA_LEN];
 char MQTT_CHAN[MAX_CHANNEL_LEN];
 char FIELD_BUF[MAX_DATA_LEN];
 
-//IPAddress IP STATIC_IP ;
-//byte mac[] = ETHER_MAC ;
 
 #ifdef MQTT_SERVER_MODE_DNS
 const char SERVER[] = MQTT_SERVER_NAME;
@@ -144,13 +144,48 @@ void initStatusLeds() {
   pinMode(STATUS_LED_MQTT   , OUTPUT);
   pinMode(STATUS_LED_IN     , OUTPUT);
   pinMode(STATUS_LED_OUT    , OUTPUT);
+  pinMode(STATUS_LED_OTA    , OUTPUT);
+  pinMode(STATUS_LED_WEB    , OUTPUT);
 
   controlStatusLed(STATUS_LED_WIFI, LOW);
   controlStatusLed(STATUS_LED_MQTT, LOW);
   controlStatusLed(STATUS_LED_IN  , LOW);
   controlStatusLed(STATUS_LED_OUT , LOW);
+  controlStatusLed(STATUS_LED_OTA , LOW);
+  controlStatusLed(STATUS_LED_WEB , LOW);
 }
 
+
+void initOTA() {
+  ArduinoOTA.setPort(OTA_PORT);
+  ArduinoOTA.setHostname(OTA_HOSTNAME);
+  ArduinoOTA.setPassword((const char *)OTA_PASSWORD);
+
+  ArduinoOTA.onStart([]() { Serial.println(F("\n=== OTA Start ===")); controlStatusLed(STATUS_LED_OTA , HIGH); });
+  ArduinoOTA.onEnd([]()   { Serial.println(F("\n=== OTA End ===")); controlStatusLed(STATUS_LED_OTA , LOW); });
+  
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    unsigned int percent = (progress / (total / 100));
+    static int ledstate = LOW;
+    
+    Serial.printf("\tOTA Progress: %u%%\r", percent);
+    if(percent%5 == 0) {
+      ledstate == LOW ? ledstate=HIGH:ledstate=LOW;
+      controlStatusLed(STATUS_LED_OTA, ledstate);
+    }
+  });
+  
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
+    else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
+    else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
+    else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
+    else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
+  });
+  
+  ArduinoOTA.begin();
+}
 
 void controlStatusLed(int pin, int state) {
   digitalWrite(pin, state);
@@ -166,13 +201,17 @@ void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {
-    Serial.print("."); // wait for serial port to connect. Needed for native USB port only
+    // wait for serial port to connect. Needed for native USB port only
   }
+  
+  delay(1000);
   Serial.println(F("\n\n\n======= RFLINK TO JSON MQTT - ESP8266 ======="));
   
   initSoftwareSerial();
   wifiConnect();
+  initOTA();
   mqttConnect();
+  initWebServer();
 }
 
 /*********************************************************************************
@@ -224,6 +263,10 @@ void loop() {
       controlStatusLed(STATUS_LED_IN, LOW);
     }
   }
-
+  
   client.loop();
+  ArduinoOTA.handle();
+  webSocket.cleanupClients();
+  //webSocket.printfAll("web socket refresh \n");
+  //delay(2000);
 }

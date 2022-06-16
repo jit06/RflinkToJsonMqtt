@@ -35,11 +35,20 @@
 // software serial pin
 #define SOFTWARE_SERIAL_RX 4
 #define SOFTWARE_SERIAL_TX 5
-// status leds
+// status leds (D0=16, D5=14, D6=12, D7=13, D8=15 )
 #define STATUS_LED_WIFI 16
 #define STATUS_LED_MQTT 14
 #define STATUS_LED_IN   12
 #define STATUS_LED_OUT  13
+#define STATUS_LED_OTA  15
+#define STATUS_LED_WEB  A0
+
+// HTTP Server port
+#define HTTP_PORT 80
+// OTA settings
+#define OTA_PORT 8266
+#define OTA_HOSTNAME "rflink-ESP8266"
+#define OTA_PASSWORD "123"
 
 /*********************************************************************************
  * functions defined in scketch
