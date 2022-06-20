@@ -8,6 +8,8 @@ The Original code was made for Arduino nano and W5100 ethernet. The main branch 
 
 All parameters can be changed in file common.h
 
+Build example can be found on by blog : https://www.bluemind.org/rflink-mqtt-v2-enhanced-minimized
+
 Known limitations :
 - setting Rlink to debug mode crash this sketch (debug messages are too long for buffer size)
 - not all possible fields / values has been tested, you may want to customize Rflink.h (feel free to make pull request)
