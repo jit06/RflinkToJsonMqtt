@@ -1,4 +1,7 @@
 # RflinkToJsonMqtt
+PLEASE NOTE THAT THIS BRANCH IS NOT UPDATED ANYMORE AS THE NEW VERSION HAS BEEN REWORKED FOR ESP8266
+H0WEVER, THE CODE STILL COMPILES AND RUNS AND ARDUINO NANO AND WIZNET W5100
+
 This arduino sketch allow to build a gateway RFlink serial output and a MQTT server. 
 
 The serial message from Rflink is converted on the fly to json payload. This make Rflink output more standard and easier to parse.
