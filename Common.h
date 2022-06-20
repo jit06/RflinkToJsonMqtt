@@ -1,11 +1,6 @@
 #ifndef H_COMMON
 #define H_COMMON
 
-#include <SoftwareSerial.h>
-#include <PubSubClient.h>
-#include <ESP8266WiFi.h>
-#include <SPI.h>
-
 /*********************************************************************************
  * Global parameters
 /*********************************************************************************/
@@ -36,12 +31,12 @@
 #define SOFTWARE_SERIAL_RX 4
 #define SOFTWARE_SERIAL_TX 5
 // status leds (D0=16, D5=14, D6=12, D7=13, D8=15 )
-#define STATUS_LED_WIFI 16
-#define STATUS_LED_MQTT 14
-#define STATUS_LED_IN   12
-#define STATUS_LED_OUT  13
-#define STATUS_LED_OTA  15
-#define STATUS_LED_WEB  A0
+#define STATUS_LED_WIFI  16
+#define STATUS_LED_MQTT  14
+#define STATUS_LED_IN    12
+#define STATUS_LED_OUT   13
+#define STATUS_LED_WEB   15
+#define STATUS_LED_OTA   15
 
 // HTTP Server port
 #define HTTP_PORT 80
@@ -50,16 +45,5 @@
 #define OTA_HOSTNAME "rflink-ESP8266"
 #define OTA_PASSWORD "123"
 
-/*********************************************************************************
- * functions defined in scketch
-/*********************************************************************************/
-void callback(char* topic, byte* payload, unsigned int length);
-void buildMqttChannel(char *name, char *ID);
-void printToSerial();
-void wifiConnect();
-boolean mqttConnect();
-void initSoftwareSerial();
-void initStatusLeds();
-void controlStatusLed(int pin, int state);
 
 #endif

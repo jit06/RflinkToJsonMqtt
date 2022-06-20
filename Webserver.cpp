@@ -1,18 +1,31 @@
 #include "Webserver.h"
 #include "Common.h"
+#include "StatusLeds.h"
 
-// web server
+// web server variables
 AsyncWebServer webServer(HTTP_PORT);
 AsyncWebSocket webSocket("/ws");
 
+
+/*
+ * send a standard HTTP not found response
+ */
 void httpNotFound(AsyncWebServerRequest *request) {
     request->send(404, "text/plain", "Not found");
 }
 
+
+/*
+ * send default HTTP page
+ */
 void httpRoot(AsyncWebServerRequest *request) {
   request->send(200, "text/html", root_html);
 }
 
+
+/*
+ * handle websocket events
+ */
 void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   Serial.println(F("\n=== HTTP ==="));
 
@@ -20,11 +33,13 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
     case WS_EVT_CONNECT:
       Serial.print(F("web socket connected - ID = ")); Serial.println(client->id());
       client->printf("web socket connected - ID = %u\n\n", client->id());
+      controlStatusLed(STATUS_LED_WEB , HIGH);
       client->ping();
       break;
     
     case WS_EVT_DISCONNECT:
       Serial.print(F("web socket disconnected - ID = ")); Serial.println(client->id());
+      controlStatusLed(STATUS_LED_WEB , LOW);
       break;
   
     case WS_EVT_ERROR:
@@ -42,6 +57,10 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
   }
 }
 
+
+/*
+ * Setup HTTP serveur and socket
+ */
 void initWebServer() {    
    Serial.print(F("starting web server..."));
    webServer.on("/"  ,HTTP_GET,httpRoot);

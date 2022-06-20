@@ -1,110 +1,66 @@
+#include <ESP8266WiFi.h>
+#include <ArduinoOTA.h>
+#include <SoftwareSerial.h>
+#include <SPI.h>
+#include <PubSubClient.h>
+
 #include "Common.h"
 #include "Rflink.h"
 #include "Webserver.h"
-#include <ArduinoOTA.h>
+#include "Mqtt.h"
+#include "StatusLeds.h"
 
-/*********************************************************************************
- * Global Variables
-/*********************************************************************************/
-// main input / output buffers
-char BUFFER [BUFFER_SIZE];
-char JSON   [BUFFER_SIZE];
+#define MSG_RFLINK_PACKET   F("\n=== rflink packet ===")
+#define MSG_RFLINK_RAW      F("raw  => ")
+#define MSG_RFLINK_MQTT     F("mqtt => ")
+#define MSG_RFLINK_SEP      F("/")
+#define MSG_RFLINK_CR       F("\n")
 
-// message builder buffers
-char MQTT_NAME[MAX_DATA_LEN];
-char MQTT_ID  [MAX_DATA_LEN];
-char MQTT_CHAN[MAX_CHANNEL_LEN];
-char FIELD_BUF[MAX_DATA_LEN];
+/*
+ * external global variables
+ */
+// from Rflink.cpp
+extern char BUFFER [];
+extern char JSON   [];
 
+// from Mqtt.cpp
+extern char MQTT_CHAN[];
+extern PubSubClient client;
 
-#ifdef MQTT_SERVER_MODE_DNS
-const char SERVER[] = MQTT_SERVER_NAME;
-#else
-IPAddress SERVER MQTT_SERVER_IP ;
-#endif
+// from Webserver.h
+extern AsyncWebSocket webSocket;
+
+/*
+ * local global variables
+ */
+// serial connection to rflink
+SoftwareSerial softSerial (SOFTWARE_SERIAL_RX, SOFTWARE_SERIAL_TX); // RX, TX
 
 // Serial iterator counter
 int CPT;
-// reconnection attemps timer counter
-long lastReconnectAttempt = 0;
 
-SoftwareSerial mySerial(SOFTWARE_SERIAL_RX, SOFTWARE_SERIAL_TX); // RX, TX
-
-//EthernetClient ethClient;
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-
-/**
- * callback to handle rflink order received from MQTT subscribtion
- */
-void mqttCallback(char* topic, byte* payload, unsigned int len) {
-  controlStatusLed(STATUS_LED_OUT, HIGH);
-  mySerial.write(payload, len);
-  mySerial.print(F("\r\n"));
-  Serial.println(F("\n=== Mqtt packet ==="));
-  Serial.print(F("message => "));
-  Serial.write(payload, len);
-  Serial.print(F("\n"));
-  controlStatusLed(STATUS_LED_OUT, LOW);
-}
-
-/**
- * build MQTT channel name to pubish to using parsed NAME and ID from rflink message
- */
-void buildMqttChannel(char *name, char *ID) {
-  MQTT_CHAN[0] = '\0';
-  strcat(MQTT_CHAN,MQTT_PUBLISH_CHANNEL);
-  strcat(MQTT_CHAN,"/");
-  strcat(MQTT_CHAN,MQTT_NAME);
-  strcat(MQTT_CHAN,"/");
-  strcat(MQTT_CHAN,MQTT_ID);;
-  strcat(MQTT_CHAN,"\0");
-}
 
 /**
  * send formated message to serial
  */
 void printToSerial() {
-  Serial.println(F("\n=== rflink packet ==="));
-  Serial.print(F("raw  => ")); if(BUFFER[strlen(BUFFER)-1] == '\n') Serial.print(BUFFER); else Serial.println(BUFFER);    
-  Serial.print(F("mqtt => ")); Serial.print(MQTT_CHAN); Serial.print(F("/")); Serial.println(JSON);
-}
-
-/**
- * try to connect to MQTT Server
- */
-boolean mqttConnect() {
-  controlStatusLed(STATUS_LED_MQTT, LOW);
-  Serial.print(F("Connecting to MQTT..."));
-  client.setServer(SERVER,MQTT_PORT);
-  client.setCallback(mqttCallback);
-
-  while (!client.connected()) {
-    // connect to Mqtt server and subcribe to order channel
-    if (client.connect(MQTT_RFLINK_CLIENT_NAME)) {
-      client.subscribe(MQTT_RFLINK_ORDER_CHANNEL);
-      controlStatusLed(STATUS_LED_MQTT, HIGH);
-      Serial.print(" OK");
-    }
-    else {
-      controlStatusLed(STATUS_LED_MQTT, HIGH);
-      delay(1000);
-      controlStatusLed(STATUS_LED_MQTT, LOW);
-      Serial.print(F("ERROR ("));
-      Serial.print(client.state());
-      Serial.println(F(")"));
-      Serial.println(F("retry in 5 secs"));
-      delay(4000);
-    }
+  Serial.println(MSG_RFLINK_PACKET);
+  webSocket.textAll(MSG_RFLINK_PACKET);webSocket.textAll(MSG_RFLINK_CR);
+  
+  Serial.print(MSG_RFLINK_RAW);
+  webSocket.textAll(MSG_RFLINK_RAW);
+  if(BUFFER[strlen(BUFFER)-1] == '\n') { 
+    Serial.print(BUFFER);
+    webSocket.textAll(BUFFER);
+  } else {
+    Serial.println(BUFFER);
+    webSocket.textAll(BUFFER);webSocket.textAll(MSG_RFLINK_CR);
   }
-  
-  Serial.print(F(" ("));
-  Serial.print(SERVER);
-  Serial.println(F(")"));
-  controlStatusLed(STATUS_LED_MQTT, HIGH);
-  
-  return client.connected();
+    
+  Serial.print(MSG_RFLINK_MQTT);  webSocket.textAll(MSG_RFLINK_MQTT); 
+  Serial.print(MQTT_CHAN);        webSocket.textAll(MQTT_CHAN);
+  Serial.print(MSG_RFLINK_SEP);   webSocket.textAll(MSG_RFLINK_SEP);
+  Serial.println(JSON);           webSocket.textAll(JSON);webSocket.textAll(MSG_RFLINK_CR);
 }
 
 
@@ -133,29 +89,16 @@ void wifiConnect() {
  * Setup software serial to get RFlink output
  */
 void initSoftwareSerial() {
+  
   Serial.print(F("Init software serial..."));
-  mySerial.begin(57600); // RF Link output at 57600
+  softSerial.begin(57600); // RF Link output at 57600
   Serial.println(F(" OK"));
 }
 
 
-void initStatusLeds() {
-  pinMode(STATUS_LED_WIFI   , OUTPUT);
-  pinMode(STATUS_LED_MQTT   , OUTPUT);
-  pinMode(STATUS_LED_IN     , OUTPUT);
-  pinMode(STATUS_LED_OUT    , OUTPUT);
-  pinMode(STATUS_LED_OTA    , OUTPUT);
-  pinMode(STATUS_LED_WEB    , OUTPUT);
-
-  controlStatusLed(STATUS_LED_WIFI, LOW);
-  controlStatusLed(STATUS_LED_MQTT, LOW);
-  controlStatusLed(STATUS_LED_IN  , LOW);
-  controlStatusLed(STATUS_LED_OUT , LOW);
-  controlStatusLed(STATUS_LED_OTA , LOW);
-  controlStatusLed(STATUS_LED_WEB , LOW);
-}
-
-
+/**
+ * Setup OTA update
+ */
 void initOTA() {
   ArduinoOTA.setPort(OTA_PORT);
   ArduinoOTA.setHostname(OTA_HOSTNAME);
@@ -169,7 +112,7 @@ void initOTA() {
     static int ledstate = LOW;
     
     Serial.printf("\tOTA Progress: %u%%\r", percent);
-    if(percent%5 == 0) {
+    if(percent%2 == 0) {
       ledstate == LOW ? ledstate=HIGH:ledstate=LOW;
       controlStatusLed(STATUS_LED_OTA, ledstate);
     }
@@ -187,9 +130,6 @@ void initOTA() {
   ArduinoOTA.begin();
 }
 
-void controlStatusLed(int pin, int state) {
-  digitalWrite(pin, state);
-}
 
 /*********************************************************************************
  * Classic arduino bootstrap
@@ -201,10 +141,11 @@ void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {
-    // wait for serial port to connect. Needed for native USB port only
+    // wait for serial port to connect.
   }
   
   delay(1000);
+  
   Serial.println(F("\n\n\n======= RFLINK TO JSON MQTT - ESP8266 ======="));
   
   initSoftwareSerial();
@@ -213,6 +154,7 @@ void setup() {
   mqttConnect();
   initWebServer();
 }
+
 
 /*********************************************************************************
  * Main loop
@@ -238,11 +180,11 @@ void loop() {
   }
 
   // if something arrives from rflink
-  if(mySerial.available() > 0) {
+  if(softSerial.available() > 0) {
     controlStatusLed(STATUS_LED_IN, HIGH);
     // bufferize serial message until we find end of mqtt message (\n)
-    while(mySerial.available() > 0 && CPT < BUFFER_SIZE) {
-      BUFFER[CPT] = mySerial.read();
+    while(softSerial.available() > 0 && CPT < BUFFER_SIZE) {
+      BUFFER[CPT] = softSerial.read();
       CPT++;
       if(BUFFER[CPT-1] == '\n') break;
     }
@@ -254,10 +196,7 @@ void loop() {
    
       // parse what we just read
       readRfLinkPacket(BUFFER);
-      // construct channel name to publish to
-      buildMqttChannel(MQTT_NAME, MQTT_ID);
-      // publish to MQTT server
-      client.publish(MQTT_CHAN,JSON);
+      mqttSendMessage(JSON);
       // report message for debugging
       printToSerial();
       controlStatusLed(STATUS_LED_IN, LOW);
@@ -267,6 +206,4 @@ void loop() {
   client.loop();
   ArduinoOTA.handle();
   webSocket.cleanupClients();
-  //webSocket.printfAll("web socket refresh \n");
-  //delay(2000);
 }

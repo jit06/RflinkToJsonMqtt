@@ -2,6 +2,15 @@
  * RFLink parser functions
 /*********************************************************************************/
 #include "Rflink.h"
+//#include "GlobalVariables.h"
+
+// main input / output buffers
+char BUFFER [BUFFER_SIZE];
+char JSON   [BUFFER_SIZE];
+char FIELD_BUF[MAX_DATA_LEN];
+
+extern char MQTT_NAME[];
+extern char MQTT_ID[]; 
 
 /**
  * Read RFLink packet (line terminated by \n) and

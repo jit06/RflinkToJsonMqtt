@@ -4,8 +4,6 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-extern AsyncWebSocket webSocket;
-extern AsyncWebServer webServer;
 
 void httpNotFound(AsyncWebServerRequest *request);
 void httpRoot(AsyncWebServerRequest *request);

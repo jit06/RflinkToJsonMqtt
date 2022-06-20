@@ -21,13 +21,13 @@
 
 
 // main input / output buffers
-extern char BUFFER [BUFFER_SIZE];
-extern char JSON   [BUFFER_SIZE];
+//extern char BUFFER [BUFFER_SIZE];
+//extern char JSON   [BUFFER_SIZE];
 
 // message builder buffers
-extern char MQTT_NAME[MAX_DATA_LEN];
-extern char MQTT_ID  [MAX_DATA_LEN];
-extern char FIELD_BUF[MAX_DATA_LEN];
+//extern char MQTT_NAME[MAX_DATA_LEN];
+//extern char MQTT_ID  [MAX_DATA_LEN];
+//extern char FIELD_BUF[MAX_DATA_LEN];
 
 
 /*********************************************************************************
