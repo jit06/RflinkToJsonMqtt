@@ -37,7 +37,12 @@ extern AsyncWebSocket webSocket;
 SoftwareSerial softSerial (SOFTWARE_SERIAL_RX, SOFTWARE_SERIAL_TX); // RX, TX
 
 // Serial iterator counter
-int CPT;
+int CPT = 0;
+
+//int ti=0;
+//const char* TEST_STRING = "20;97;OregonV1;ID=0042;TEMP=00c5;BAT=OK;\n20;99;Renkforce E_TA;ID=0049;TEMP=0129;\n20;9A;OK;\n20;9B;OK;\n20;9C;OK;\n20;9E;Oregon TempHygro;ID=2DD1;TEMP=00d3;HUM=45;HSTATUS=1;BAT=OK;\n";
+
+//const char* TEST_STRING = "Renkforce E_TA;ID=0049;TEMP=0129;\n20;9A;OK;\n";
 
 
 /**
@@ -63,6 +68,10 @@ void printToSerial() {
   Serial.println(JSON);           webSocket.textAll(JSON);webSocket.textAll(MSG_RFLINK_CR);
 }
 
+void doNothing() {
+  Serial.println("\n\n === HALTED ===");
+  while(1);
+}
 
 /**
  * try to connect to Wifi
@@ -72,12 +81,26 @@ void wifiConnect() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print(F("Connecting to WiFi..."));
+  int wifiStatus = -1;
 
-  while(WiFi.status() != WL_CONNECTED){
+  do {
+    wifiStatus = WiFi.status();
+
+    switch(wifiStatus) {
+      case 0 : Serial.print(F(" idle"));break;
+      case 1 : Serial.print(F(" no SSID available"));doNothing();
+      case 4 : Serial.print(F(" connection failed"));doNothing();
+      case 6 : Serial.print(F("\t wrong password"));doNothing();
+      case 7 : Serial.print(F("."));break;
+    }
+
     controlStatusLed(STATUS_LED_WIFI, HIGH);
     delay(200);
     controlStatusLed(STATUS_LED_WIFI, LOW);
-  }
+    delay(200);
+    
+  } while(wifiStatus!= WL_CONNECTED);
+
   Serial.print(F(" OK ("));
   Serial.print(WiFi.localIP());
   Serial.println(F(")"));
@@ -91,7 +114,8 @@ void wifiConnect() {
 void initSoftwareSerial() {
   
   Serial.print(F("Init software serial..."));
-  softSerial.begin(57600); // RF Link output at 57600
+ // softSerial.begin(57600); // RF Link output at 57600
+  softSerial.begin(57600, SWSERIAL_8N1, SOFTWARE_SERIAL_RX, SOFTWARE_SERIAL_TX, false, 256, 64);
   Serial.println(F(" OK"));
 }
 
@@ -183,23 +207,29 @@ void loop() {
   if(softSerial.available() > 0) {
     controlStatusLed(STATUS_LED_IN, HIGH);
     // bufferize serial message until we find end of mqtt message (\n)
-    while(softSerial.available() > 0 && CPT < BUFFER_SIZE) {
+    while(softSerial.available() > 0 && CPT < BUFFER_SIZE -1) { // BUFFER_SIZE -1 ensure that we always have at least 1 char left for \0
       BUFFER[CPT] = softSerial.read();
       CPT++;
       if(BUFFER[CPT-1] == '\n') break;
     }
-    
+  
     // we start parsing rflink only if last read char is end of message (\n)
     if(BUFFER[CPT-1] == '\n') {
       BUFFER[CPT]='\0';
       CPT=0;
    
       // parse what we just read
-      readRfLinkPacket(BUFFER);
-      mqttSendMessage(JSON);
-      // report message for debugging
-      printToSerial();
-      controlStatusLed(STATUS_LED_IN, LOW);
+      if(readRfLinkPacket(BUFFER)) {
+        mqttSendMessage(JSON);
+        // report message for debugging
+        printToSerial();
+        controlStatusLed(STATUS_LED_IN, LOW);
+      }
+    }
+
+    // if we ended up filling all the buffer without any \n, we just restart the counter
+    if(CPT >= BUFFER_SIZE -1) {
+      CPT=0;
     }
   }
   
