@@ -82,7 +82,7 @@ const char* const  RFLINK_MQTT_NAMES_NO_JSON[] = {
 /*********************************************************************************
  * RFLink functions
 /*********************************************************************************/
-void readRfLinkPacket(char* line);
+int  readRfLinkPacket(char* line);
 void readRfLinkFields(char* fields, int start);
 
 bool RfLinkFieldIsString(char *buffer);

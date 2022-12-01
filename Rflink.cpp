@@ -18,14 +18,18 @@ extern char MQTT_ID[];
  * - extract ID of the sender (eg: ID=012345) to MQTT_ID
  * - create a JSON message with all encountered fields
  */
-void readRfLinkPacket(char* line) {
-  int i = 6; // ignore message type and line number
+int readRfLinkPacket(char* line) {
+  int i = 6; // ignore message type and line number (xx;yy;)
   int j = 0;
   bool nameHasEq = false;
   
   // check len and ignore bad packet (broken serial, etc.)
-  if(strlen(line) < RFLINK_PACKET_MIN_SIZE) return;
-
+  if( strlen(line) < RFLINK_PACKET_MIN_SIZE ||  // consider that very small string are not good
+      line[i-1] != ';'                         // if the 5th char is not ';', something went wrong and the line is not well formed
+    ) {
+    
+    return 0;
+  }
   
   // get name : 3rd field (begins at char 6)
   while(line[i] != ';' && i < BUFFER_SIZE && j < MAX_DATA_LEN) {
@@ -47,20 +51,21 @@ void readRfLinkPacket(char* line) {
     strcpy_P(MQTT_NAME,PSTR("message"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
     readRfLinkFields(line, i);
-    return;
+    return 1;
   }
   
   
   // for debug and ACK messages, send them directly, no json convertion
   if(RfLinkIsStringInArray(MQTT_NAME,RFLINK_MQTT_NAMES_NO_JSON)) {
-    Serial.println(F("*special name found: no JSON convertion"));
+    /*Serial.println(F("*special name found: no JSON convertion"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
     j=0;
     while(line[i] != '\n' && i < BUFFER_SIZE && j < BUFFER_SIZE) {
       JSON[j++] = line[i++];
     }
     JSON[j-1]='\0';
-    return;
+    return 1;*/
+    return 0;
   }
 
   
@@ -74,6 +79,8 @@ void readRfLinkPacket(char* line) {
   
   // continue with json convertion
   readRfLinkFields(line, i+1);
+
+  return 1;
 }
 
 
@@ -163,11 +170,13 @@ bool RfLinkFieldIsHexInteger(char *buffer) {
 
 
 /**
- * check if a given field name is used for Oregon temperature (thus need to be converted to float)
+ * check if a given field name is used for Oregon or renkforce temperature (thus need to be converted to float)
  */
 bool RfLinkFieldIsOregon(char *buffer) {
-   return ((strncmp_P(MQTT_NAME,PSTR("Oregon"),6)) == 0) && 
-          ( strcmp_P (FIELD_BUF,PSTR("TEMP")     ) == 0);
+   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon"),6) == 0) ||
+            (strncmp_P(MQTT_NAME,PSTR("Renkforce"),9) == 0)) && 
+           
+            (strcmp_P (FIELD_BUF,PSTR("TEMP")     ) == 0));
 }
 
 
