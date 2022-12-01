@@ -5,11 +5,11 @@
  * Global parameters
 /*********************************************************************************/
 // Maximum size of one serial line and json content
-#define BUFFER_SIZE 200
+#define BUFFER_SIZE 2048
 // Maximum size for record name, record id, json field name and json field value
-#define MAX_DATA_LEN 24 
+#define MAX_DATA_LEN 250
 // Maximum channel path size (at least lenght of MQTT_PUBLISH_CHANNEL + 2 x MAX_DATA_LEN)
-#define MAX_CHANNEL_LEN 60
+#define MAX_CHANNEL_LEN 512
 // default MQTT server port
 #define MQTT_PORT 1883
 // default MQTT Channel to publish to
@@ -42,8 +42,8 @@
 #define HTTP_PORT 80
 // OTA settings
 #define OTA_PORT 8266
-#define OTA_HOSTNAME "rflink-ESP8266"
-#define OTA_PASSWORD "123"
+#define OTA_HOSTNAME ""
+#define OTA_PASSWORD ""
 
 
 #endif
