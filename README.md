@@ -27,11 +27,10 @@ Build example can be found on by blog, but the post has been made with the old w
 
 
 **Default Wiring :**
-D0 (gpio16) => Wifi status led
-D1 (gpio5)  => Mqtt connection status led
-D2 (gpio4)  => Rflink message status IN led
-D5 (gpio14) => Rflink message status OUT led
-D6 (gpio12) => Websocket connection status and OTA connection led
-
-D7 (gpio13) => Rflink hardware Serial RX to Arduino Mega TX0
-D8 (gpio15) => Rflink hardware Serial TX to Arduino Mega RX0
+- D0 (gpio16) => Wifi status led
+- D1 (gpio5)  => Mqtt connection status led
+- D2 (gpio4)  => Rflink message status IN led
+- D5 (gpio14) => Rflink message status OUT led
+- D6 (gpio12) => Websocket connection status and OTA connection led
+- D7 (gpio13) => Rflink hardware Serial RX to Arduino Mega TX0
+- D8 (gpio15) => Rflink hardware Serial TX to Arduino Mega RX0
