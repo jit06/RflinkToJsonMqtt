@@ -1,8 +1,8 @@
 /*********************************************************************************
  * RFLink parser functions
 /*********************************************************************************/
+#include <SoftwareSerial.h>
 #include "Rflink.h"
-//#include "GlobalVariables.h"
 
 // main input / output buffers
 char BUFFER [BUFFER_SIZE];
@@ -10,7 +10,10 @@ char JSON   [BUFFER_SIZE];
 char FIELD_BUF[MAX_DATA_LEN];
 
 extern char MQTT_NAME[];
-extern char MQTT_ID[]; 
+extern char MQTT_ID[];
+
+// from main sketch file
+extern SoftwareSerial* Logger;
 
 /**
  * Read RFLink packet (line terminated by \n) and
@@ -22,15 +25,17 @@ int readRfLinkPacket(char* line) {
   int i = 6; // ignore message type and line number (xx;yy;)
   int j = 0;
   bool nameHasEq = false;
-  
+
   // check len and ignore bad packet (broken serial, etc.)
-  if( strlen(line) < RFLINK_PACKET_MIN_SIZE ||  // consider that very small string are not good
+  if( strlen(line) < RFLINK_PACKET_MIN_SIZE || // consider that very small string are not good
       line[i-1] != ';'                         // if the 5th char is not ';', something went wrong and the line is not well formed
     ) {
-    
+    Logger->print(F("Invalid RFlink message ignored ("));
+    Logger->print(line);
+    Logger->print(F(")"));
     return 0;
   }
-  
+
   // get name : 3rd field (begins at char 6)
   while(line[i] != ';' && i < BUFFER_SIZE && j < MAX_DATA_LEN) {
     if      (line[i]==' ')  MQTT_NAME[j] = '_';
@@ -41,23 +46,23 @@ int readRfLinkPacket(char* line) {
 
   // ends string correctly
   MQTT_NAME[j] = '\0';
- 
-  
+
+
   // if name contains "=", assumes that it's an rflink message, not an RF packet
   // thus we put a special name and ID=0, then parse to JSON
   if(nameHasEq==true) {
-    Serial.println(F("*rflink message detected (name contains '=')"));
+    Logger->println(F("*rflink message detected (name contains '=')"));
     i = 6;
     strcpy_P(MQTT_NAME,PSTR("message"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
     readRfLinkFields(line, i);
     return 1;
   }
-  
-  
+
+
   // for debug and ACK messages, send them directly, no json convertion
   if(RfLinkIsStringInArray(MQTT_NAME,RFLINK_MQTT_NAMES_NO_JSON)) {
-    /*Serial.println(F("*special name found: no JSON convertion"));
+    /*Logger->println(F("*special name found: no JSON convertion"));
     MQTT_ID[0]='0'; MQTT_ID[1]='\0';
     j=0;
     while(line[i] != '\n' && i < BUFFER_SIZE && j < BUFFER_SIZE) {
@@ -68,7 +73,7 @@ int readRfLinkPacket(char* line) {
     return 0;
   }
 
-  
+
   // for all other messages, get MQTT_ID (4th field) then convert to json
   j=0;
   i+=4; // skip ";MQTT_ID="
@@ -76,7 +81,6 @@ int readRfLinkPacket(char* line) {
     MQTT_ID[j++] = line[i++];
   }
   MQTT_ID[j] = '\0';
-  
   // continue with json convertion
   readRfLinkFields(line, i+1);
 
@@ -97,7 +101,7 @@ void readRfLinkFields(char* fields, int start){
   JSON[1]='\0';
 
   while(strpos < BUFFER_SIZE-start && fields[strpos] != '\n' && fields[strpos] != '\0') {
-    
+
     // if current char is "=", we end name parsing and start parsing the field's value
     if(fields[strpos] == '=') {
       FIELD_BUF[fldpos]='\0';
@@ -110,7 +114,7 @@ void readRfLinkFields(char* fields, int start){
       else                                        valueType=RFLINK_VALUE_TYPE_RAWVAL;
 
       RfLinkFieldAddQuotedValue(FIELD_BUF);
-      
+
     // if current char is ";", we end parsing value and start parsing another field's name
     } else if(fields[strpos] == ';') {
 
@@ -125,7 +129,7 @@ void readRfLinkFields(char* fields, int start){
         case RFLINK_VALUE_TYPE_INTEGER: RfLinkFieldAddIntegerValue(FIELD_BUF);break;
         default : strcat(JSON,FIELD_BUF);
       }
-      
+
       strcat(JSON,",");
     } else { // default case : copy current char
       FIELD_BUF[fldpos++]=fields[strpos];
@@ -144,7 +148,7 @@ void readRfLinkFields(char* fields, int start){
  */
 bool RfLinkIsStringInArray(char *buffer, const char* const strArray[]) {
   int i = 0;
-  
+
   while(strArray[i][0] != '\0') {
     if((strcmp(buffer, (strArray[i++]))==0)) return true;
   }
@@ -173,10 +177,9 @@ bool RfLinkFieldIsHexInteger(char *buffer) {
  * check if a given field name is used for Oregon or renkforce temperature (thus need to be converted to float)
  */
 bool RfLinkFieldIsOregon(char *buffer) {
-   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon"),6) == 0) ||
-            (strncmp_P(MQTT_NAME,PSTR("Renkforce"),9) == 0)) && 
-           
-            (strcmp_P (FIELD_BUF,PSTR("TEMP")     ) == 0));
+   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon")   ,6) == 0) ||
+             (strncmp_P(MQTT_NAME,PSTR("Renkforce"),9) == 0)) &&
+             (strcmp_P (FIELD_BUF,PSTR("TEMP")       ) == 0));
 }
 
 
