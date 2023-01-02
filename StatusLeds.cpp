@@ -14,6 +14,12 @@ void initStatusLeds() {
   pinMode(STATUS_LED_OTA    , OUTPUT);
   pinMode(STATUS_LED_WEB    , OUTPUT);
 
+  pinMode(13, INPUT);
+  pinMode(15, OUTPUT);
+
+  controlStatusLed(13,LOW);
+  controlStatusLed(15,LOW);
+
   controlStatusLed(STATUS_LED_WIFI, LOW);
   controlStatusLed(STATUS_LED_MQTT, LOW);
   controlStatusLed(STATUS_LED_IN  , LOW);

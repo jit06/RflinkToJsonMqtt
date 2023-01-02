@@ -14,11 +14,10 @@
 /*
  * external global variables
  */
-// from RflinkToJsonMqtt.cpp
-extern SoftwareSerial softSerial;
 // from Webserver.cpp
 extern AsyncWebSocket webSocket;
-
+// from main sketch file
+extern SoftwareSerial* Logger;
 
 /*
  * local global variables
@@ -38,13 +37,19 @@ PubSubClient client(espClient);
  */
 void mqttCallback(char* topic, byte* payload, unsigned int len) {
   controlStatusLed(STATUS_LED_OUT, HIGH);
-  softSerial.write(payload, len);
-  softSerial.print(F("\r\n"));
-  
-  Serial.println(MSG_MQTT_PACKET);  webSocket.textAll(MSG_MQTT_PACKET);webSocket.textAll(MSG_MQTT_CR);
-  Serial.print(MSG_MQTT_MSG);       webSocket.textAll(MSG_MQTT_MSG);
-  Serial.write(payload, len);       webSocket.textAll(payload, len);
-  Serial.print(MSG_MQTT_CR);        webSocket.textAll(MSG_MQTT_CR);
+
+#ifdef USE_SERIAL1_TX
+  Serial1.write(payload, len);
+  Serial1.print(F("\r\n"));
+#else
+  Serial.write(payload, len);
+  Serial.print(F("\r\n"));
+#endif
+
+  Logger->println(MSG_MQTT_PACKET);  webSocket.textAll(MSG_MQTT_PACKET);webSocket.textAll(MSG_MQTT_CR);
+  Logger->print(MSG_MQTT_MSG);       webSocket.textAll(MSG_MQTT_MSG);
+  Logger->write(payload, len);       webSocket.textAll(payload, len);
+  Logger->print(MSG_MQTT_CR);        webSocket.textAll(MSG_MQTT_CR);
   
   controlStatusLed(STATUS_LED_OUT, LOW);
 }
@@ -65,7 +70,7 @@ void mqttSendMessage(char* message) {
  * build MQTT channel name to publish to using parsed NAME and ID from rflink message
  */
 void buildMqttChannel(char *name, char *ID) {
-  MQTT_CHAN[0] = '\0';
+  MQTT_CHAN[0]='\0';
   strcat(MQTT_CHAN,MQTT_PUBLISH_CHANNEL);
   strcat(MQTT_CHAN,"/");
   strcat(MQTT_CHAN,MQTT_NAME);
@@ -80,7 +85,7 @@ void buildMqttChannel(char *name, char *ID) {
  */
 boolean mqttConnect() {
   controlStatusLed(STATUS_LED_MQTT, LOW);
-  Serial.print(F("Connecting to MQTT..."));
+  Logger->print(F("Connecting to MQTT..."));
   client.setServer(SERVER,MQTT_PORT);
   client.setCallback(mqttCallback);
 
@@ -89,24 +94,24 @@ boolean mqttConnect() {
     if (client.connect(MQTT_RFLINK_CLIENT_NAME)) {
       client.subscribe(MQTT_RFLINK_ORDER_CHANNEL);
       controlStatusLed(STATUS_LED_MQTT, HIGH);
-      Serial.print(" OK");
+      Logger->print(" OK");
     }
     else {
       controlStatusLed(STATUS_LED_MQTT, HIGH);
       delay(1000);
       controlStatusLed(STATUS_LED_MQTT, LOW);
-      Serial.print(F("ERROR ("));
-      Serial.print(client.state());
-      Serial.println(F(")"));
-      Serial.println(F("retry in 5 secs"));
+      Logger->print(F("ERROR ("));
+      Logger->print(client.state());
+      Logger->println(F(")"));
+      Logger->println(F("retry in 5 secs"));
       delay(4000);
     }
   }
-  
-  Serial.print(F(" ("));
-  Serial.print(SERVER);
-  Serial.println(F(")"));
+
+  Logger->print(F(" ("));
+  Logger->print(SERVER);
+  Logger->println(F(")"));
   controlStatusLed(STATUS_LED_MQTT, HIGH);
-  
+
   return client.connected();
 }

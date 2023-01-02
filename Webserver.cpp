@@ -1,3 +1,4 @@
+#include <SoftwareSerial.h>
 #include "Webserver.h"
 #include "Common.h"
 #include "StatusLeds.h"
@@ -6,6 +7,8 @@
 AsyncWebServer webServer(HTTP_PORT);
 AsyncWebSocket webSocket("/ws");
 
+// from main sketch file
+extern SoftwareSerial* Logger;
 
 /*
  * send a standard HTTP not found response
@@ -27,32 +30,32 @@ void httpRoot(AsyncWebServerRequest *request) {
  * handle websocket events
  */
 void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  Serial.println(F("\n=== HTTP ==="));
+  Logger->println(F("\n=== HTTP ==="));
 
   switch(type) {
     case WS_EVT_CONNECT:
-      Serial.print(F("web socket connected - ID = ")); Serial.println(client->id());
+      Logger->print(F("web socket connected - ID = ")); Logger->println(client->id());
       client->printf("web socket connected - ID = %u\n\n", client->id());
       controlStatusLed(STATUS_LED_WEB , HIGH);
       client->ping();
       break;
-    
+
     case WS_EVT_DISCONNECT:
-      Serial.print(F("web socket disconnected - ID = ")); Serial.println(client->id());
+      Logger->print(F("web socket disconnected - ID = ")); Logger->println(client->id());
       controlStatusLed(STATUS_LED_WEB , LOW);
       break;
-  
+
     case WS_EVT_ERROR:
-      Serial.print(F("web socket error - ID = ")); Serial.print(client->id());
-      Serial.print(F("ERROR = ")); Serial.println((char*)data);
+      Logger->print(F("web socket error - ID = ")); Logger->print(client->id());
+      Logger->print(F("ERROR = ")); Logger->println((char*)data);
       break;
 
     case WS_EVT_PONG:
-      Serial.print(F("web socket pong - ID = ")); Serial.println(client->id());
+      Logger->print(F("web socket pong - ID = ")); Logger->println(client->id());
       break;
-    
+
     case WS_EVT_DATA :
-      Serial.print(F("web socket data (ignored) - ID = ")); Serial.println(client->id());
+      Logger->print(F("web socket data (ignored) - ID = ")); Logger->println(client->id());
       break;  
   }
 }
@@ -61,12 +64,12 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
 /*
  * Setup HTTP serveur and socket
  */
-void initWebServer() {    
-   Serial.print(F("starting web server..."));
+void initWebServer() {
+   Logger->print(F("starting web server..."));
    webServer.on("/"  ,HTTP_GET,httpRoot);
    webServer.onNotFound(httpNotFound);
    webSocket.onEvent(onWebSocketEvent);
    webServer.addHandler(&webSocket);
    webServer.begin();
-   Serial.println(F(" OK"));
+   Logger->println(F(" OK"));
 }

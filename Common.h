@@ -24,26 +24,25 @@
 #define MQTT_SERVER_NAME "mqtt.local.lan"
 // MQTT Server mode : comment out to use MQTT_SERVER_IP instead of MQTT_SERVER_NAME
 #define MQTT_SERVER_MODE_DNS
+// uncomment to use Serial1 TX (gpio 14 / d4) to send order to RFlink
+#define USE_SERIAL1_TX
 // WIFI Settings
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
-// software serial pin
-#define SOFTWARE_SERIAL_RX 4
-#define SOFTWARE_SERIAL_TX 5
-// status leds (D0=16, D5=14, D6=12, D7=13, D8=15 )
+#define WIFI_SSID "MY_SSID"
+#define WIFI_PASSWORD "MY_WIFI_PASSEWORD"
+// status leds (D0=16, D1=5, D2=4 D5=14, D6=12, D7 and D8 are reserved for serial)
 #define STATUS_LED_WIFI  16
 #define STATUS_LED_MQTT  14
 #define STATUS_LED_IN    12
-#define STATUS_LED_OUT   13
-#define STATUS_LED_WEB   15
-#define STATUS_LED_OTA   15
+#define STATUS_LED_OUT    4
+#define STATUS_LED_WEB    5
+#define STATUS_LED_OTA    5
 
 // HTTP Server port
 #define HTTP_PORT 80
 // OTA settings
 #define OTA_PORT 8266
-#define OTA_HOSTNAME ""
-#define OTA_PASSWORD ""
+#define OTA_HOSTNAME "rflink"
+#define OTA_PASSWORD "MY_OTA_PASSWORD"
 
 
 #endif
