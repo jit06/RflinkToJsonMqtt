@@ -26,7 +26,7 @@ Build example can be found on by blog, but the post has been made with the old w
 - ESPAsyncTCP
 
 
-**Default Wiring : **
+**Default Wiring :**
 D0 (gpio16) => Wifi status led
 D1 (gpio5)  => Mqtt connection status led
 D2 (gpio4)  => Rflink message status IN led
