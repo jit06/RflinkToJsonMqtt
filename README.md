@@ -7,7 +7,7 @@ The sketch also subscribes to a specific MQTT channel and listen to orders to be
 The Original code was made for Arduino nano and W5100 ethernet. The main branch now runs only on ESP8266 and use wifi to connect to mqtt server. It provides OTA updates and HTTP server to see RF activcity on a browser. 
 
 All parameters can be changed in file common.h
-The sketch now use the hardware serial to communicate with RFlink in order to avoid errors (software serial is not reliable at 57600 on esp8266)
+The sketch now use the hardware serial to communicate with RFlink in order to avoid errors (software serial is not reliable at 57600 on esp8266). A parameter in Common.h (USE_SERIAL1_TX) allows to use D4 as serial TX instead of D8
 
 You should use 5 leds to get a minimal user feeback for wifi connection, mqtt server connection, message in, message out and websocket / OTA.
 
