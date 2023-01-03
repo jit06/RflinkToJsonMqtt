@@ -4,7 +4,7 @@ This arduino sketch provides a gateway between RFlink (serial output) and a MQTT
 The serial message from Rflink is converted on the fly to JSON payload. This make Rflink output more standard and easier to parse.
 The sketch also subscribes to a specific MQTT channel and listen to orders to be sent to the Rflink (no JSON, just plain Rflink text order).
 
-The Original code was made for Arduino nano and W5100 ethernet. The main branch now runs only on ESP8266 and use wifi to connect to mqtt server. It provides OTA updates and HTTP server to see RF activcity on a browser. 
+The Original code was made for Arduino nano and W5100 ethernet. The main branch now runs only on ESP8266 and use wifi to connect to mqtt server. It provides OTA updates and HTTP server to see RF activcity on a browser. This code has been tested on "Wemos D1 lite" and "Node MCU". 
 
 All parameters can be changed in file common.h
 The sketch now use the hardware serial to communicate with RFlink in order to avoid errors (software serial is not reliable at 57600 on esp8266). A parameter in Common.h (USE_SERIAL1_TX) allows to use D4 as serial TX instead of D8
