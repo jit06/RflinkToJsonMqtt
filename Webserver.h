@@ -12,14 +12,14 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
 void initWebServer();
 
 const char root_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
+<!DOCTYPE HTML><html style="height:100%">
 <head>
   <title>Rflink to Json MQTT</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<body>
+<body style="height:100%;overflow:hidden">
   <h1>Rflink to Json MQTT</h1>
-  <pre id="message"></pre>
+  <pre id="message" style="overflow:scroll;height:75%;width:auto;background-color:#DDD;padding:10px;"></pre>
 
   <script>
     var gateway = `ws://${window.location.hostname}/ws`;
@@ -36,7 +36,12 @@ const char root_html[] PROGMEM = R"rawliteral(
     }
     
     function onMessage(event) {
-      document.getElementById('message').innerText += event.data;
+      node = document.getElementById('message');
+      node.innerText += event.data;
+      len = node.innerText.length;
+      if(len >= 5000) {
+        node.innerText = node.innerText.substring(node.innerText.indexOf('\n')+1);
+      }
     }
   </script>
 </body></html>
