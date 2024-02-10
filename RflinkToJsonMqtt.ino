@@ -40,6 +40,9 @@ SoftwareSerial* Logger;
 // Serial iterator counter
 int CPT = 0;
 
+// Time counter used to detect lost of rflink activity
+unsigned long LastTime=0;
+
 /**
  * send formated message to serial and web loggers
  */
@@ -112,18 +115,14 @@ void initOTA() {
   ArduinoOTA.setHostname(OTA_HOSTNAME);
   ArduinoOTA.setPassword((const char *)OTA_PASSWORD);
 
-  ArduinoOTA.onStart([]() { Logger->println(F("\n=== OTA Start ===")); controlStatusLed(STATUS_LED_OTA , HIGH); });
-  ArduinoOTA.onEnd([]()   { Logger->println(F("\n=== OTA End ===")); controlStatusLed(STATUS_LED_OTA , LOW); });
+  ArduinoOTA.onStart([]() { Logger->println(F("\n=== OTA Start ===")); });
+  ArduinoOTA.onEnd([]()   { Logger->println(F("\n===  OTA End  ===")); });
   
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     unsigned int percent = (progress / (total / 100));
     static int ledstate = LOW;
     
     Serial.printf("\tOTA Progress: %u%%\r", percent);
-    if(percent%2 == 0) {
-      ledstate == LOW ? ledstate=HIGH:ledstate=LOW;
-      controlStatusLed(STATUS_LED_OTA, ledstate);
-    }
   });
   
   ArduinoOTA.onError([](ota_error_t error) {
@@ -139,10 +138,24 @@ void initOTA() {
 }
 
 
+/**
+ * Reset Rflink (RESET_SIGNAL pin must be connected to Arduino RST pin via a 100ohm resistor 
+ */
+void resetRFLink() {
+  digitalWrite(RESET_SIGNAL, LOW);
+  delay(50);
+  digitalWrite(RESET_SIGNAL, HIGH);
+}
+
+
 /*********************************************************************************
  * Classic arduino bootstrap
 /*********************************************************************************/
 void setup() {
+
+  // init RFLink Reset pin
+  pinMode(RESET_SIGNAL   , OUTPUT);
+  digitalWrite(RESET_SIGNAL , HIGH);
 
   initStatusLeds();
   
@@ -193,11 +206,20 @@ void loop() {
     Logger->println(F(")"));
     mqttConnect();
   }
+ 
+  // if no message received since too long time, reset rflink 
+  if(LastTime != 0 && (millis() - LastTime) > RESET_TIMEOUT ) {
+    Logger->print(F("RFLink timeout - reset"));
+    LastTime = 0;
+    resetRFLink();
+  }
 
   // if something arrives from rflink
   if(Serial.available() > 0) {
     controlStatusLed(STATUS_LED_IN, HIGH);
+    LastTime = millis();
 
+    // do the job : rflink message to MQTT
     while(Serial.available() > 0 && CPT < BUFFER_SIZE -1) {
       BUFFER[CPT++] = Serial.read();
 

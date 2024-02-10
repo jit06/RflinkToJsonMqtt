@@ -28,21 +28,22 @@
 #define USE_SERIAL1_TX
 // WIFI Settings
 #define WIFI_SSID "MY_SSID"
-#define WIFI_PASSWORD "MY_WIFI_PASSEWORD"
-// status leds (D0=16, D1=5, D2=4 D5=14, D6=12, D7 and D8 are reserved for serial)
+#define WIFI_PASSWORD "MY_PASSWORD"
+// status leds (D0=16, D2=4 D5=14, D6=12, D7 and D8 are reserved for serial)
 #define STATUS_LED_WIFI  16
 #define STATUS_LED_MQTT  14
 #define STATUS_LED_IN    12
 #define STATUS_LED_OUT    4
-#define STATUS_LED_WEB    5
-#define STATUS_LED_OTA    5
-
+// Rflink RST signal control (D1=5)
+#define RESET_SIGNAL      5
+// number of miliseconds allowed without RFlink before reseting it
+#define RESET_TIMEOUT 10000
 // HTTP Server port
 #define HTTP_PORT 80
 // OTA settings
 #define OTA_PORT 8266
 #define OTA_HOSTNAME "rflink"
-#define OTA_PASSWORD "MY_OTA_PASSWORD"
+#define OTA_PASSWORD "rflink"
 
 
 #endif

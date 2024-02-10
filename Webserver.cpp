@@ -36,13 +36,11 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
     case WS_EVT_CONNECT:
       Logger->print(F("web socket connected - ID = ")); Logger->println(client->id());
       client->printf("web socket connected - ID = %u\n\n", client->id());
-      controlStatusLed(STATUS_LED_WEB , HIGH);
       client->ping();
       break;
 
     case WS_EVT_DISCONNECT:
       Logger->print(F("web socket disconnected - ID = ")); Logger->println(client->id());
-      controlStatusLed(STATUS_LED_WEB , LOW);
       break;
 
     case WS_EVT_ERROR:
