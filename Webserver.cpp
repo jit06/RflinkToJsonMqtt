@@ -30,7 +30,7 @@ void httpRoot(AsyncWebServerRequest *request) {
  * handle websocket events
  */
 void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  Logger->println(F("\n=== HTTP ==="));
+  Logger->println(F("== HTTP =="));
 
   switch(type) {
     case WS_EVT_CONNECT:
@@ -44,7 +44,7 @@ void onWebSocketEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, Aw
       break;
 
     case WS_EVT_ERROR:
-      Logger->print(F("web socket error - ID = ")); Logger->print(client->id());
+      Logger->print(F("web socket error - ID = ")); Logger->println(client->id());
       Logger->print(F("ERROR = ")); Logger->println((char*)data);
       break;
 

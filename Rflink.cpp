@@ -30,7 +30,7 @@ int readRfLinkPacket(char* line) {
   if( strlen(line) < RFLINK_PACKET_MIN_SIZE || // consider that very small string are not good
       line[i-1] != ';'                         // if the 5th char is not ';', something went wrong and the line is not well formed
     ) {
-    Logger->print(F("Invalid RFlink message ignored ("));
+    Logger->print(F("Not an RFlink payload : ignored ("));
     Logger->print(line);
     Logger->print(F(")"));
     return 0;

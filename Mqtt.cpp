@@ -7,8 +7,8 @@
 #include "Common.h"
 #include "StatusLeds.h"
 
-#define MSG_MQTT_PACKET   F("\n=== Mqtt packet ===")
-#define MSG_MQTT_MSG      F("message => ")
+#define MSG_MQTT_PACKET   F("== MQTT ==")
+#define MSG_MQTT_MSG      F("msg << ")
 #define MSG_MQTT_CR       F("\n")
 
 /*

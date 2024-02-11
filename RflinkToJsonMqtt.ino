@@ -10,9 +10,9 @@
 #include "Mqtt.h"
 #include "StatusLeds.h"
 
-#define MSG_RFLINK_PACKET   F("\n=== rflink message ===")
-#define MSG_RFLINK_RAW      F("raw  => ")
-#define MSG_RFLINK_MQTT     F("mqtt => ")
+#define MSG_RFLINK_PACKET   F("== RFLINK ==")
+#define MSG_RFLINK_RAW      F("raw << ")
+#define MSG_RFLINK_MQTT     F("mqtt >> ")
 #define MSG_RFLINK_SEP      F("/")
 #define MSG_RFLINK_CR       F("\n")
 
