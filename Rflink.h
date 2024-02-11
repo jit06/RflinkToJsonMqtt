@@ -90,20 +90,28 @@ const char* const RFLINK_FIELD_HEXFLT[] = {
   "\0" // do not remove this mark the end of the array
 };
 
-// list of detected MQTT names that implies no json convertion, but a direct copy of the buffer
+// special values that are just ignored, thus not sent to MQTT gateway (spaces must be converted to _)
 const char RFLINK_MQTT_NAME_DEBUG[]      = "DEBUG";
 const char RFLINK_MQTT_NAME_Debug[]      = "Debug";
 const char RFLINK_MQTT_NAME_OK[]         = "OK";
 const char RFLINK_MQTT_NAME_CMD_UNKNOWN[]= "CMD_UNKNOWN";
 const char RFLINK_MQTT_NAME_PONG[]       = "PONG";
-const char RFLINK_MQTT_NAME_NODO[]       = "Nodo RadioFrequencyLink";
+const char RFLINK_MQTT_NAME_NODO46[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R46";
+const char RFLINK_MQTT_NAME_NODO47[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R47";
+const char RFLINK_MQTT_NAME_NODO48[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R48";
+const char RFLINK_MQTT_NAME_NODO50[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R50";
+const char RFLINK_MQTT_NAME_NODO51[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R51";
 const char* const  RFLINK_MQTT_NAMES_NO_JSON[] = {
   RFLINK_MQTT_NAME_DEBUG,
   RFLINK_MQTT_NAME_Debug,
   RFLINK_MQTT_NAME_OK,
   RFLINK_MQTT_NAME_CMD_UNKNOWN,
   RFLINK_MQTT_NAME_PONG,
-  RFLINK_MQTT_NAME_NODO,
+  RFLINK_MQTT_NAME_NODO46,
+  RFLINK_MQTT_NAME_NODO47,
+  RFLINK_MQTT_NAME_NODO48,
+  RFLINK_MQTT_NAME_NODO50,
+  RFLINK_MQTT_NAME_NODO51,
   "\0" // do not remove this mark the end of the array
 };
 
@@ -115,7 +123,7 @@ int  readRfLinkPacket(char* line);
 void readRfLinkFields(char* fields, int start);
 
 bool RfLinkFieldIsString(char *buffer);
-bool RfLinkFieldIsOregon(char *buffer);
+bool RfLinkFieldIsHexFloat(char *buffer);
 bool RfLinkFieldIsHexInteger(char *buffer);
 
 void RfLinkFieldAddQuotedValue (char *buffer);

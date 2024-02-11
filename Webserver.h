@@ -70,6 +70,7 @@ const char root_html[] PROGMEM = R"rawliteral(
           document.getElementById('dateTime').innerText += now.toLocaleString() +"\n";
         }
         else if(buffer.indexOf("mqtt >> ")>=0) {
+          buffer=buffer.replace("== RFLINK ==","");
           node = document.getElementById('mqttMessage');
           buffer=buffer.substring(8);
         }

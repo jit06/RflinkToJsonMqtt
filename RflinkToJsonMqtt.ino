@@ -67,7 +67,7 @@ void printToLogger() {
 }
 
 void doNothing() {
-  Logger->println("\n\n === HALTED ===");
+  Logger->println("\n== HALTED ==");
   while(1);
 }
 
@@ -192,7 +192,7 @@ void loop() {
 
   wifiState = WiFi.status();
   if(wifiState != WL_CONNECTED) {
-    Logger->print(F("Wifi disconnected (state = "));
+    Logger->print(F("*Wifi disconnected (state = "));
     Logger->print(wifiState);
     Logger->println(F(")"));
     wifiConnect();
@@ -201,7 +201,7 @@ void loop() {
   mqttState = client.state();
   // handle lost of connection
   if (mqttState != 0) {
-    Logger->print(F("MQTT disconnected (state = "));
+    Logger->print(F("*MQTT disconnected (state = "));
     Logger->print(mqttState);
     Logger->println(F(")"));
     mqttConnect();
@@ -209,7 +209,7 @@ void loop() {
  
   // if no message received since too long time, reset rflink 
   if(LastTime != 0 && (millis() - LastTime) > RESET_TIMEOUT ) {
-    Logger->print(F("RFLink timeout - reset"));
+    Logger->println(F("*RFLink timeout - reset"));
     LastTime = 0;
     resetRFLink();
   }

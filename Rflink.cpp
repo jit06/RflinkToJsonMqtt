@@ -30,15 +30,16 @@ int readRfLinkPacket(char* line) {
   if( strlen(line) < RFLINK_PACKET_MIN_SIZE || // consider that very small string are not good
       line[i-1] != ';'                         // if the 5th char is not ';', something went wrong and the line is not well formed
     ) {
-    Logger->print(F("Not an RFlink payload : ignored ("));
+    Logger->print(F("*Not an RFlink payload : ignored ("));
     Logger->print(line);
     Logger->print(F(")"));
     return 0;
   }
 
-  // get name : 3rd field (begins at char 6)
+  // get name : 3rd field (begins at char 6). Spaces and slashes are replaced by underscore
   while(line[i] != ';' && i < BUFFER_SIZE && j < MAX_DATA_LEN) {
     if      (line[i]==' ')  MQTT_NAME[j] = '_';
+    else if (line[i]=='/')  MQTT_NAME[j] = '_';
     else if (line[i]=='=')  { nameHasEq = true; break; }
     else                    MQTT_NAME[j] = line[i];
     i++; j++;
@@ -60,16 +61,10 @@ int readRfLinkPacket(char* line) {
   }
 
 
-  // for debug and ACK messages, send them directly, no json convertion
+  // for debug and ACK messages just ignore them
   if(RfLinkIsStringInArray(MQTT_NAME,RFLINK_MQTT_NAMES_NO_JSON)) {
-    /*Logger->println(F("*special name found: no JSON convertion"));
-    MQTT_ID[0]='0'; MQTT_ID[1]='\0';
-    j=0;
-    while(line[i] != '\n' && i < BUFFER_SIZE && j < BUFFER_SIZE) {
-      JSON[j++] = line[i++];
-    }
-    JSON[j-1]='\0';
-    return 1;*/
+    Logger->print(F("*Ignored message: "));
+    Logger->print(line);
     return 0;
   }
 
@@ -109,7 +104,7 @@ void readRfLinkFields(char* fields, int start){
 
       // Tag field regarding the name...
       if(RfLinkFieldIsString(FIELD_BUF))          valueType=RFLINK_VALUE_TYPE_STRING;
-      else if(RfLinkFieldIsOregon(FIELD_BUF))     valueType=RFLINK_VALUE_TYPE_FLOAT;
+      else if(RfLinkFieldIsHexFloat(FIELD_BUF))   valueType=RFLINK_VALUE_TYPE_FLOAT;
       else if(RfLinkFieldIsHexInteger(FIELD_BUF)) valueType=RFLINK_VALUE_TYPE_INTEGER;
       else                                        valueType=RFLINK_VALUE_TYPE_RAWVAL;
 
@@ -174,14 +169,10 @@ bool RfLinkFieldIsHexInteger(char *buffer) {
 
 
 /**
- * check if a given field name is used for Oregon or renkforce temperature (thus need to be converted to float)
+ * check if a given field name is used for hex float (thus need to be converted to dec)
  */
-bool RfLinkFieldIsOregon(char *buffer) {
-/*   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon")   ,6) == 0) ||
-             (strncmp_P(MQTT_NAME,PSTR("Renkforce"),9) == 0)) &&
-             (strcmp_P (FIELD_BUF,PSTR("TEMP")       ) == 0));
-*/
-    return RfLinkIsStringInArray(buffer, RFLINK_FIELD_HEXFLT);
+bool RfLinkFieldIsHexFloat(char *buffer) {
+  return RfLinkIsStringInArray(buffer, RFLINK_FIELD_HEXFLT);
 }
 
 
