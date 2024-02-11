@@ -16,9 +16,8 @@
 // Rflink value type tags
 #define RFLINK_VALUE_TYPE_INTEGER 0
 #define RFLINK_VALUE_TYPE_STRING  1
-#define RFLINK_VALUE_TYPE_OREGON  2
+#define RFLINK_VALUE_TYPE_FLOAT   2
 #define RFLINK_VALUE_TYPE_RAWVAL  3
-
 
 // main input / output buffers
 //extern char BUFFER [BUFFER_SIZE];
@@ -54,12 +53,42 @@ const char* const RFLINK_FIELD_STRING[] = {
 // list of fields with hex encoded integer that must be converted to decimal integer
 const char RFLINK_FIELD_NAME_WATT[]        = "WATT";
 const char RFLINK_FIELD_NAME_KWATT[]       = "KWATT";
+const char RFLINK_FIELD_NAME_BARO[]        = "BARO";
+const char RFLINK_FIELD_NAME_UV[]          = "UV";
+const char RFLINK_FIELD_NAME_LUX[]         = "LUX";
+const char RFLINK_FIELD_NAME_RAIN[]        = "RAIN";
+const char RFLINK_FIELD_NAME_RAINRATE[]    = "RAINRATE";
+const char RFLINK_FIELD_NAME_WINSP[]       = "WINSP";
+const char RFLINK_FIELD_NAME_AWINSP[]      = "AWINSP";
+const char RFLINK_FIELD_NAME_WINGS[]       = "WINGS";
+const char RFLINK_FIELD_NAME_WINDIR[]      = "WINDIR";
+const char RFLINK_FIELD_NAME_WDIR[]        = "WDIR";
 const char* const RFLINK_FIELD_HEXINT[] = {
   RFLINK_FIELD_NAME_WATT,
   RFLINK_FIELD_NAME_KWATT,
+  RFLINK_FIELD_NAME_BARO,
+  RFLINK_FIELD_NAME_UV,
+  RFLINK_FIELD_NAME_LUX,
+  RFLINK_FIELD_NAME_RAIN,
+  RFLINK_FIELD_NAME_RAINRATE,
+  RFLINK_FIELD_NAME_WINSP,
+  RFLINK_FIELD_NAME_AWINSP,
+  RFLINK_FIELD_NAME_WINGS,
+  RFLINK_FIELD_NAME_WINDIR,
+  RFLINK_FIELD_NAME_WDIR,
   "\0" // do not remove this mark the end of the array
 };
 
+// list of fields with hex encoded float value that must be converted to decimal float
+const char RFLINK_FIELD_NAME_TEMP[]   = "TEMP";
+const char RFLINK_FIELD_NAME_WINCHL[] = "WINCHL";
+const char RFLINK_FIELD_NAME_WINTMP[] = "WINTMP";
+const char* const RFLINK_FIELD_HEXFLT[] = {
+  RFLINK_FIELD_NAME_TEMP,
+  RFLINK_FIELD_NAME_WINCHL,
+  RFLINK_FIELD_NAME_WINTMP,
+  "\0" // do not remove this mark the end of the array
+};
 
 // list of detected MQTT names that implies no json convertion, but a direct copy of the buffer
 const char RFLINK_MQTT_NAME_DEBUG[]      = "DEBUG";
@@ -90,7 +119,7 @@ bool RfLinkFieldIsOregon(char *buffer);
 bool RfLinkFieldIsHexInteger(char *buffer);
 
 void RfLinkFieldAddQuotedValue (char *buffer);
-void RfLinkFieldAddOregonValue (char *buffer);
+void RfLinkFieldAddFloatValue (char *buffer);
 void RfLinkFieldAddIntegerValue(char *buffer);
 
 bool RfLinkIsStringInArray(char *buffer, const char* const strArray[]);

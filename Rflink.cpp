@@ -109,7 +109,7 @@ void readRfLinkFields(char* fields, int start){
 
       // Tag field regarding the name...
       if(RfLinkFieldIsString(FIELD_BUF))          valueType=RFLINK_VALUE_TYPE_STRING;
-      else if(RfLinkFieldIsOregon(FIELD_BUF))     valueType=RFLINK_VALUE_TYPE_OREGON;
+      else if(RfLinkFieldIsOregon(FIELD_BUF))     valueType=RFLINK_VALUE_TYPE_FLOAT;
       else if(RfLinkFieldIsHexInteger(FIELD_BUF)) valueType=RFLINK_VALUE_TYPE_INTEGER;
       else                                        valueType=RFLINK_VALUE_TYPE_RAWVAL;
 
@@ -125,7 +125,7 @@ void readRfLinkFields(char* fields, int start){
       // Handle special cases...
       switch(valueType) {
         case RFLINK_VALUE_TYPE_STRING:  RfLinkFieldAddQuotedValue(FIELD_BUF); break;
-        case RFLINK_VALUE_TYPE_OREGON:  RfLinkFieldAddOregonValue(FIELD_BUF); break;
+        case RFLINK_VALUE_TYPE_FLOAT:   RfLinkFieldAddFloatValue(FIELD_BUF); break;
         case RFLINK_VALUE_TYPE_INTEGER: RfLinkFieldAddIntegerValue(FIELD_BUF);break;
         default : strcat(JSON,FIELD_BUF);
       }
@@ -177,9 +177,11 @@ bool RfLinkFieldIsHexInteger(char *buffer) {
  * check if a given field name is used for Oregon or renkforce temperature (thus need to be converted to float)
  */
 bool RfLinkFieldIsOregon(char *buffer) {
-   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon")   ,6) == 0) ||
+/*   return ( ((strncmp_P(MQTT_NAME,PSTR("Oregon")   ,6) == 0) ||
              (strncmp_P(MQTT_NAME,PSTR("Renkforce"),9) == 0)) &&
              (strcmp_P (FIELD_BUF,PSTR("TEMP")       ) == 0));
+*/
+    return RfLinkIsStringInArray(buffer, RFLINK_FIELD_HEXFLT);
 }
 
 
@@ -197,7 +199,7 @@ void RfLinkFieldAddQuotedValue(char *buffer) {
  * convert a string to float value and put it in the JSON buffer
  * eg : 0x00c3 which is 216 (dec) will become 21.6
  */
-void RfLinkFieldAddOregonValue(char *buffer) {
+void RfLinkFieldAddFloatValue(char *buffer) {
   char strfloat[4];
   dtostrf(strtoul(buffer,NULL,16)*0.1, 2, 1, strfloat);
   strfloat[4]='\0';
