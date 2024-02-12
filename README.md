@@ -7,13 +7,13 @@ The sketch also subscribes to a specific MQTT channel and listen to orders to be
 The Original code was made for Arduino nano and W5100 ethernet. The main branch now runs only on ESP8266 and use wifi to connect to mqtt server. It provides OTA updates and HTTP server to see RF activcity on a browser. This code has been tested on "Wemos D1 lite" and "Node MCU". 
 
 All parameters can be changed in file common.h
-The sketch now use the hardware serial to communicate with RFlink in order to avoid errors (software serial is not reliable at 57600 on esp8266). A parameter in Common.h (USE_SERIAL1_TX) allows to use D4 as serial TX instead of D8
+The sketch now uses the hardware serial to communicate with RFlink in order to avoid errors (software serial is not reliable at 57600 bauds on esp8266). 
 
 You should use 4 leds to get a minimal user feeback for wifi connection, mqtt server connection, message in and message out.
 
 Build example can be found on by blog, but the post has been made with the old wiring that used software serial to communicate with Rflink: https://www.bluemind.org/rflink-mqtt-v2-enhanced-minimized
 
-**Main features :**
+**Main features:**
 - Support all documented Rflink fields
 - Convert HEX values to corresponding decimal int and float (eg: TEMP=00cb is converted to "TEMP":20.3)
 - Replace "/" by "_" in field names to avoid unexpected mqtt channel path
@@ -27,18 +27,21 @@ Some examples of Rflink message converted and sent to the mqtt server :
 | 20;AE;OregonV1;ID=008B;TEMP=00cc;BAT=OK;         | rflink/OregonV1/008B/{"TEMP":20.4,"BAT":"OK"}       |
 | 20;9C;NewKaku;ID=00000200;SWITCH=1;CMD=OFF;      | rflink/NewKaku/00000200/{"SWITCH":"1","CMD":"OFF"}  |
 
-**Known limitations :**
+**Web interface screenshot:**
+<img src="https://github.com/jit06/RflinkToJsonMqtt/blob/770418db8d2389958073e0d3b5f243b6ba7c8848/screenshot_web.jpg" width=920>
+
+**Known limitations:**
 - Hardware serial is swapped to D7 and D8, so they are dedicated to serial communication with RFLink
 - Default USB Serial and TX/RX pins are mapped with software serial at 9600 bauds. So Serial debugging only works at that speed.
 
-**Required libraries :**
+**Required libraries:**
 - SoftwareSerial
 - PubSubClient
 - Wifi
 - ESPAsyncWebServer 
 - ESPAsyncTCP
 
-**Default Wiring :**
+**Default Wiring:**
 - D0 (gpio16) => Wifi status led
 - D2 (gpio4)  => Mqtt connection status led
 - D5 (gpio14) => Rflink message status IN led
