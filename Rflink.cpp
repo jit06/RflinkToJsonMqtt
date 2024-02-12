@@ -30,14 +30,13 @@ int readRfLinkPacket(char* line) {
   if( strlen(line) < RFLINK_PACKET_MIN_SIZE || // consider that very small string are not good
       line[i-1] != ';'                         // if the 5th char is not ';', something went wrong and the line is not well formed
     ) {
-    Logger->print(F("*Not an RFlink payload : ignored ("));
+    Logger->print(F("*Not an RFlink payload: "));
     Logger->print(line);
-    Logger->print(F(")"));
     return 0;
   }
 
   // get name : 3rd field (begins at char 6). Spaces and slashes are replaced by underscore
-  while(line[i] != ';' && i < BUFFER_SIZE && j < MAX_DATA_LEN) {
+  while(line[i] != ';' && line[i] != '\r' && i < BUFFER_SIZE && j < MAX_DATA_LEN) {
     if      (line[i]==' ')  MQTT_NAME[j] = '_';
     else if (line[i]=='/')  MQTT_NAME[j] = '_';
     else if (line[i]=='=')  { nameHasEq = true; break; }
@@ -47,7 +46,6 @@ int readRfLinkPacket(char* line) {
 
   // ends string correctly
   MQTT_NAME[j] = '\0';
-
 
   // if name contains "=", assumes that it's an rflink message, not an RF packet
   // thus we put a special name and ID=0, then parse to JSON

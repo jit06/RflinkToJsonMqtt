@@ -96,6 +96,7 @@ const char RFLINK_MQTT_NAME_Debug[]      = "Debug";
 const char RFLINK_MQTT_NAME_OK[]         = "OK";
 const char RFLINK_MQTT_NAME_CMD_UNKNOWN[]= "CMD_UNKNOWN";
 const char RFLINK_MQTT_NAME_PONG[]       = "PONG";
+const char RFLINK_MQTT_NAME_PULLUP[]     = "Internal_Pullup_on_RF-in_disabled";
 const char RFLINK_MQTT_NAME_NODO46[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R46";
 const char RFLINK_MQTT_NAME_NODO47[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R47";
 const char RFLINK_MQTT_NAME_NODO48[]     = "Nodo_RadioFrequencyLink_-_RFLink_Gateway_V1.1_-_R48";
@@ -107,6 +108,7 @@ const char* const  RFLINK_MQTT_NAMES_NO_JSON[] = {
   RFLINK_MQTT_NAME_OK,
   RFLINK_MQTT_NAME_CMD_UNKNOWN,
   RFLINK_MQTT_NAME_PONG,
+  RFLINK_MQTT_NAME_PULLUP,
   RFLINK_MQTT_NAME_NODO46,
   RFLINK_MQTT_NAME_NODO47,
   RFLINK_MQTT_NAME_NODO48,
