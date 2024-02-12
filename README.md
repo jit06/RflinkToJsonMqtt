@@ -18,7 +18,8 @@ Build example can be found on by blog, but the post has been made with the old w
 - Convert HEX values to corresponding decimal int and float (eg: TEMP=00cb is converted to "TEMP":20.3)
 - Replace "/" by "_" in field names to avoid unexpected mqtt channel path
 - All non RF messages are ignored (boot message, ping, etc.)
-- Web interface that reports activity : incomming RFlink message, Mqtt message and received Rflink order to transmit. All Log message are also printed on the browser's console
+- Web interface that reports activity : incoming RFlink message, Mqtt message and received Rflink order to transmit. All Log messages are also printed on the browser's console
+- Reset Rflink when it crashes (which may occur more or less frequently)
 
 Some examples of Rflink message converted and sent to the mqtt server :
 | Rflink message                                   | mqtt message                                        |
