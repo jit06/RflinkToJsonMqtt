@@ -50,3 +50,6 @@ Some examples of Rflink message converted and sent to the mqtt server :
 - D1 (gpio5)  => To arduino's RST pin via a 100 ohms resistor
 - D7 (gpio13) => Rflink hardware Serial RX to Arduino Mega TX0
 - D8 (gpio15) => Rflink hardware Serial TX to Arduino Mega RX0
+
+Note that if you use a Wemos D1, D8 cannot be used for serial TX as it prevents the wemos from booting if the pin is connected. In that case, you must use D4 for TX and thus enable the USE_SERIAL1_TX settings in common.h (this is the default)
+
